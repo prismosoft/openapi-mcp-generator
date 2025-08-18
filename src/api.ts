@@ -26,6 +26,10 @@ export interface GetToolsOptions {
   filterFn?: (tool: McpToolDefinition) => boolean;
 }
 
+function isOpenApiDocument(spec: string | OpenAPIV3.Document): spec is OpenAPIV3.Document {
+  return typeof spec === 'object' && 'openapi' in spec;
+}
+
 /**
  * Get a list of tools from an OpenAPI specification
  *
@@ -34,14 +38,16 @@ export interface GetToolsOptions {
  * @returns Promise that resolves to an array of tool definitions
  */
 export async function getToolsFromOpenApi(
-  specPathOrUrl: string,
+  specPathOrUrl: string | OpenAPIV3.Document,
   options: GetToolsOptions = {}
 ): Promise<McpToolDefinition[]> {
   try {
     // Parse the OpenAPI spec
-    const api = options.dereference
-      ? ((await SwaggerParser.dereference(specPathOrUrl)) as OpenAPIV3.Document)
-      : ((await SwaggerParser.parse(specPathOrUrl)) as OpenAPIV3.Document);
+    const api = isOpenApiDocument(specPathOrUrl)
+      ? specPathOrUrl
+      : options.dereference
+        ? ((await SwaggerParser.dereference(specPathOrUrl)) as OpenAPIV3.Document)
+        : ((await SwaggerParser.parse(specPathOrUrl)) as OpenAPIV3.Document);
 
     // Extract tools from the API
     const allTools = extractToolsFromApi(api);
