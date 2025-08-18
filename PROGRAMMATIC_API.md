@@ -64,7 +64,7 @@ for (const tool of filteredTools) {
 }
 ```
 
-you can also provide a `OpenAPIV3.Document` do the parser:
+you can also provide a `OpenAPIV3.Document` to the parser:
 
 ```typescript
 import { parser } from '@readme/openapi-parser';
