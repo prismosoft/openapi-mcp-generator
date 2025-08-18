@@ -27,7 +27,7 @@ export interface GetToolsOptions {
 }
 
 function isOpenApiDocument(spec: string | OpenAPIV3.Document): spec is OpenAPIV3.Document {
-  return typeof spec === 'object' && 'openapi' in spec;
+  return typeof spec === 'object' && spec !== null && 'openapi' in spec;
 }
 
 /**
