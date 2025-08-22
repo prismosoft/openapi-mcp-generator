@@ -1,6 +1,7 @@
 /**
  * General helper utilities for OpenAPI to MCP generator
  */
+import { OpenAPIV3 } from 'openapi-types';
 
 /**
  * Safely stringify a JSON object with proper error handling
@@ -109,4 +110,38 @@ export function formatComment(str: string, maxLineLength: number = 80): string {
   }
 
   return lines.join('\n * ');
+}
+
+/**
+ * Normalize a value to boolean if it looks like a boolean; otherwise undefined.
+ */
+export function normalizeBoolean(value: unknown): boolean | undefined {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    return normalized === 'true' ? true : normalized === 'false' ? false : undefined;
+  }
+  return undefined;
+}
+
+/**
+ * Determine if an operation should be included in MCP generation based on x-mcp.
+ * Precedence: operation > path > root; uses provided default when all undefined.
+ */
+export function shouldIncludeOperationForMcp(
+  api: OpenAPIV3.Document,
+  pathItem: OpenAPIV3.PathItemObject,
+  operation: OpenAPIV3.OperationObject,
+  defaultInclude: boolean = true
+): boolean {
+  const opVal = normalizeBoolean((operation as any)['x-mcp']);
+  if (typeof opVal !== 'undefined') return opVal;
+
+  const pathVal = normalizeBoolean((pathItem as any)['x-mcp']);
+  if (typeof pathVal !== 'undefined') return pathVal;
+
+  const rootVal = normalizeBoolean((api as any)['x-mcp']);
+  if (typeof rootVal !== 'undefined') return rootVal;
+
+  return defaultInclude; // use provided default
 }

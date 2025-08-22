@@ -29,6 +29,8 @@ export interface CliOptions {
   transport?: TransportType;
   /** Server port (for web and streamable-http transports) */
   port?: number;
+  /** Default behavior for x-mcp filtering (default: true = include by default) */
+  defaultInclude?: boolean;
 }
 
 /**

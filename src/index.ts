@@ -72,6 +72,11 @@ program
     'Port for web or streamable-http transport (default: 3000)',
     (val) => parseInt(val, 10)
   )
+  .option(
+    '--default-include <boolean>',
+    'Default behavior for x-mcp filtering (default: true = include by default, false = exclude by default)',
+    (val) => (val === 'false' ? false : true)
+  )
   .option('--force', 'Overwrite existing files without prompting')
   .version(pkg.version) // Match package.json version
   .action((options) => {
