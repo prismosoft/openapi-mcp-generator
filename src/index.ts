@@ -30,6 +30,7 @@ import {
 
 // Import types
 import { CliOptions, TransportType } from './types/index.js';
+import { normalizeBoolean } from './utils/helpers.js';
 import pkg from '../package.json' with { type: 'json' };
 
 // Export programmatic API
@@ -75,7 +76,14 @@ program
   .option(
     '--default-include <boolean>',
     'Default behavior for x-mcp filtering (default: true = include by default, false = exclude by default)',
-    (val) => (val === 'false' ? false : true)
+    (val) => {
+      const parsed = normalizeBoolean(val);
+      if (typeof parsed === 'boolean') return parsed;
+      console.warn(
+        `Invalid value for --default-include: "${val}". Expected true/false (case-insensitive). Using default: true.`
+      );
+      return true;
+    }
   )
   .option('--force', 'Overwrite existing files without prompting')
   .version(pkg.version) // Match package.json version
