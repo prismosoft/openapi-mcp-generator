@@ -134,14 +134,38 @@ export function shouldIncludeOperationForMcp(
   operation: OpenAPIV3.OperationObject,
   defaultInclude: boolean = true
 ): boolean {
-  const opVal = normalizeBoolean((operation as any)['x-mcp']);
+  const opRaw = (operation as any)['x-mcp'];
+  const opVal = normalizeBoolean(opRaw);
   if (typeof opVal !== 'undefined') return opVal;
+  if (typeof opRaw !== 'undefined') {
+    console.warn(
+      `Invalid x-mcp value on operation '${operation.operationId ?? '[no operationId]'}':`,
+      opRaw,
+      `-> expected boolean or 'true'/'false'. Falling back to path/root/default.`
+    );
+  }
 
-  const pathVal = normalizeBoolean((pathItem as any)['x-mcp']);
+  const pathRaw = (pathItem as any)['x-mcp'];
+  const pathVal = normalizeBoolean(pathRaw);
   if (typeof pathVal !== 'undefined') return pathVal;
+  if (typeof pathRaw !== 'undefined') {
+    console.warn(
+      `Invalid x-mcp value on path item:`,
+      pathRaw,
+      `-> expected boolean or 'true'/'false'. Falling back to root/default.`
+    );
+  }
 
-  const rootVal = normalizeBoolean((api as any)['x-mcp']);
+  const rootRaw = (api as any)['x-mcp'];
+  const rootVal = normalizeBoolean(rootRaw);
   if (typeof rootVal !== 'undefined') return rootVal;
+  if (typeof rootRaw !== 'undefined') {
+    console.warn(
+      `Invalid x-mcp value at API root:`,
+      rootRaw,
+      `-> expected boolean or 'true'/'false'. Falling back to defaultInclude=${defaultInclude}.`
+    );
+  }
 
   return defaultInclude;
 }
