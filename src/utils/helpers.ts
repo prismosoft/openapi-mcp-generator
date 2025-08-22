@@ -143,5 +143,5 @@ export function shouldIncludeOperationForMcp(
   const rootVal = normalizeBoolean((api as any)['x-mcp']);
   if (typeof rootVal !== 'undefined') return rootVal;
 
-  return defaultInclude; // use provided default
+  return defaultInclude;
 }
