@@ -24,6 +24,9 @@ export interface GetToolsOptions {
 
   /** Optional filter function to exclude tools based on custom criteria */
   filterFn?: (tool: McpToolDefinition) => boolean;
+
+  /** Default behavior for x-mcp filtering (default: true = include by default) */
+  defaultInclude?: boolean;
 }
 
 /**
@@ -44,7 +47,7 @@ export async function getToolsFromOpenApi(
       : ((await SwaggerParser.parse(specPathOrUrl)) as OpenAPIV3.Document);
 
     // Extract tools from the API
-    const allTools = extractToolsFromApi(api);
+    const allTools = extractToolsFromApi(api, options.defaultInclude ?? true);
 
     // Add base URL to each tool
     const baseUrl = determineBaseUrl(api, options.baseUrl);
