@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2025-08-24
+
+### Changed
+
+- Version bump to next minor release
+- Updated package version to reflect accumulated features and improvements
+
+## [3.1.4] - 2025-08-24
+
+### Added
+
+- Endpoint filtering using `x-mcp` OpenAPI extension to control which operations are exposed as MCP tools
+- CLI option `--default-include` to change default behavior for endpoint inclusion
+- Precedence rules for `x-mcp` extension (operation > path > root level)
+- Enhanced programmatic API with `defaultInclude` option in `getToolsFromOpenApi`
+
+### Changed
+
+- Improved documentation with examples for endpoint filtering and OpenAPI extensions
+
+## [3.1.3] - 2025-08-18
+
+### Added
+
+- Support for pre-parsed OpenAPI documents in programmatic API
+- Enhanced `getToolsFromOpenApi` function to accept both file paths and parsed `OpenAPIV3.Document` objects
+- Improved TypeScript interface documentation for tool definitions
+
+### Changed
+
+- Simplified build script for better maintainability
+- Updated development and peer dependencies to newer minor versions
+
 ## [3.1.2] - 2025-06-08
 
 ### Fixed
