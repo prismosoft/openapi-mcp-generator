@@ -7,13 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.2.0] - 2025-08-24
 
-### Changed
-
-- Version bump to next minor release
-- Updated package version to reflect accumulated features and improvements
-
-## [3.1.4] - 2025-08-24
-
 ### Added
 
 - Endpoint filtering using `x-mcp` OpenAPI extension to control which operations are exposed as MCP tools
@@ -23,20 +16,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Improved documentation with examples for endpoint filtering and OpenAPI extensions
+- Improved documentation with examples for endpoint filtering and OpenAPI extensions.
+- Version bump to next minor release
+- Updated package version to reflect accumulated features and improvements
 
-## [3.1.3] - 2025-08-18
+## [3.1.4] - 2025-06-18
 
-### Added
+### Chores
 
-- Support for pre-parsed OpenAPI documents in programmatic API
-- Enhanced `getToolsFromOpenApi` function to accept both file paths and parsed `OpenAPIV3.Document` objects
-- Improved TypeScript interface documentation for tool definitions
+- Updated the application version to 3.1.4 and ensured the CLI displays the version dynamically.
 
-### Changed
+### Style
 
-- Simplified build script for better maintainability
-- Updated development and peer dependencies to newer minor versions
+- Improved code formatting for better readability.
+
+### Bug Fixes
+
+- Tool names now retain their original casing during extraction.
+
+## [3.1.3] - 2025-06-12
+
+### Fixed
+
+- Cannot find the package after building and the problem during the building.
 
 ## [3.1.2] - 2025-06-08
 
