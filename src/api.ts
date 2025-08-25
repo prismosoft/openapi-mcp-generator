@@ -80,7 +80,8 @@ export async function getToolsFromOpenApi(
   } catch (error) {
     // Provide more context for the error
     if (error instanceof Error) {
-      throw new Error(`Failed to extract tools from OpenAPI: ${error.message}`);
+      // Preserve original stack/context
+      throw new Error(`Failed to extract tools from OpenAPI: ${error.message}`, { cause: error });
     }
     throw error;
   }

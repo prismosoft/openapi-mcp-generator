@@ -43,8 +43,17 @@ export function extractToolsFromApi(
           continue;
         }
       } catch (error) {
+        const loc = operation.operationId || `${method} ${path}`;
+        const extVal =
+          (operation as any)['x-mcp'] ?? (pathItem as any)['x-mcp'] ?? (api as any)['x-mcp'];
+        let extPreview: string;
+        try {
+          extPreview = JSON.stringify(extVal);
+        } catch {
+          extPreview = String(extVal);
+        }
         console.warn(
-          `Error evaluating x-mcp extension for operation ${operation.operationId || `${method} ${path}`}:`,
+          `Error evaluating x-mcp extension for operation ${loc} (x-mcp=${extPreview}):`,
           error
         );
         if (!defaultInclude) {
