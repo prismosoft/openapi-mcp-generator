@@ -105,6 +105,12 @@ import {
 import { z, ZodError } from 'zod';
 import { jsonSchemaToZod } from 'json-schema-to-zod';
 import axios, { type AxiosRequestConfig, type AxiosError } from 'axios';
+import { AsyncLocalStorage } from 'async_hooks';
+
+/**
+ * Async local storage for session-specific data
+ */
+export const sessionStorage = new AsyncLocalStorage<{ bearerToken?: string }>();
 
 /**
  * Type definition for JSON objects

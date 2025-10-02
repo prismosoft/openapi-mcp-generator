@@ -25,7 +25,7 @@ import type { SSEStreamingApi } from 'hono/streaming';
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 
 // Import server configuration constants
-import { SERVER_NAME, SERVER_VERSION } from './index.js';
+import { SERVER_NAME, SERVER_VERSION, sessionStorage } from './index.js';
 
 /**
 * Custom SSE Transport implementation using Hono's streaming API
@@ -164,6 +164,8 @@ app.use('*', cors());
 
 // Store active SSE transports by session ID
 const transports: {[sessionId: string]: SSETransport} = {};
+// Store bearer tokens by session ID
+const sessionTokens: {[sessionId: string]: string} = {};
 
 // Add a simple health check endpoint
 app.get('/health', (c) => {
@@ -171,63 +173,78 @@ app.get('/health', (c) => {
 });
 
 // SSE endpoint for clients to connect to
-app.get("/sse", (c) => {
-  return streamSSE(c, async (stream) => {
-    // Create SSE transport
-    const transport = new SSETransport('/api/messages', stream);
-    const sessionId = transport.sessionId;
-    
-    console.error(\`New SSE connection established: \${sessionId}\`);
-    
-    // Store the transport
-    transports[sessionId] = transport;
-    
-    // Set up cleanup on transport close
-    transport.onclose = () => {
-      console.error(\`SSE connection closed for session \${sessionId}\`);
-      delete transports[sessionId];
-    };
-    
-    // Make the transport available to the MCP server
-    try {
-      transport.onmessage = async (message: JSONRPCMessage) => {
-        try {
-          // The server will automatically send a response via the transport 
-          // if the message has an ID (i.e., it's a request, not a notification)
-        } catch (error) {
-          console.error('Error handling MCP message:', error);
-        }
-      };
-      
-      // Connect to the MCP server
-      await server.connect(transport);
-    } catch (error) {
-      console.error(\`Error connecting transport for session \${sessionId}:\`, error);
-    }
-    
-    // Keep the stream open until aborted
-    while (!stream.closed) {
-      await stream.sleep(1000);
-    }
-  });
-});
+ app.get("/sse", (c) => {
+   return streamSSE(c, async (stream) => {
+     // Extract bearer token from query string if present
+     const token = c.req.query('token');
+
+     // Create SSE transport
+     const transport = new SSETransport('/api/messages', stream);
+     const sessionId = transport.sessionId;
+
+     console.error(\`New SSE connection established: \${sessionId}\`);
+
+     // Store the transport
+     transports[sessionId] = transport;
+
+     // Store the token for this session if provided
+     if (token) {
+       sessionTokens[sessionId] = token;
+       console.error(\`Bearer token stored for session \${sessionId}\`);
+     }
+
+     // Set up cleanup on transport close
+     transport.onclose = () => {
+       console.error(\`SSE connection closed for session \${sessionId}\`);
+       delete transports[sessionId];
+       // Clear the token for this session
+       delete sessionTokens[sessionId];
+     };
+
+     // Make the transport available to the MCP server
+     try {
+       transport.onmessage = async (message: JSONRPCMessage) => {
+         try {
+           // Run in session context with the stored token
+           const token = sessionTokens[sessionId];
+           await sessionStorage.run({ bearerToken: token }, async () => {
+             // The server will automatically send a response via the transport
+             // if the message has an ID (i.e., it's a request, not a notification)
+           });
+         } catch (error) {
+           console.error('Error handling MCP message:', error);
+         }
+       };
+
+       // Connect to the MCP server
+       await server.connect(transport);
+     } catch (error) {
+       console.error(\`Error connecting transport for session \${sessionId}:\`, error);
+     }
+
+     // Keep the stream open until aborted
+     while (!stream.closed) {
+       await stream.sleep(1000);
+     }
+   });
+ });
 
 // API endpoint for clients to send messages
-app.post("/api/messages", async (c) => {
-  const sessionId = c.req.query('sessionId');
-  
-  if (!sessionId) {
-    return c.json({ error: 'Missing sessionId query parameter' }, 400);
-  }
-  
-  const transport = transports[sessionId];
-  
-  if (!transport) {
-    return c.json({ error: 'No active session found with the provided sessionId' }, 404);
-  }
-  
-  return transport.handlePostMessage(c);
-});
+ app.post("/api/messages", async (c) => {
+   const sessionId = c.req.query('sessionId');
+
+   if (!sessionId) {
+     return c.json({ error: 'Missing sessionId query parameter' }, 400);
+   }
+
+   const transport = transports[sessionId];
+
+   if (!transport) {
+     return c.json({ error: 'No active session found with the provided sessionId' }, 404);
+   }
+
+   return transport.handlePostMessage(c);
+ });
 
 // Static files for the web client (if any)
 app.get('/*', async (c) => {

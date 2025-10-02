@@ -23,7 +23,7 @@ import { InitializeRequestSchema, JSONRPCError } from "@modelcontextprotocol/sdk
 import { toReqRes, toFetchResponse } from 'fetch-to-node';
 
 // Import server configuration constants
-import { SERVER_NAME, SERVER_VERSION } from './index.js';
+import { SERVER_NAME, SERVER_VERSION, sessionStorage } from './index.js';
 
 // Constants
 const SESSION_ID_HEADER_NAME = "mcp-session-id";
@@ -36,7 +36,9 @@ class MCPStreamableHttpServer {
   server: Server;
   // Store active transports by session ID
   transports: {[sessionId: string]: StreamableHTTPServerTransport} = {};
-  
+  // Store bearer tokens by session ID
+  sessionTokens: {[sessionId: string]: string} = {};
+
   constructor(server: Server) {
     this.server = server;
   }
@@ -56,20 +58,24 @@ class MCPStreamableHttpServer {
    */
   async handlePostRequest(c: any) {
     const sessionId = c.req.header(SESSION_ID_HEADER_NAME);
+    const token = c.req.query('token');
     console.error(\`POST request received \${sessionId ? 'with session ID: ' + sessionId : 'without session ID'}\`);
-    
+
     try {
       const body = await c.req.json();
       
       // Convert Fetch Request to Node.js req/res
       const { req, res } = toReqRes(c.req.raw);
       
-      // Reuse existing transport if we have a session ID
-      if (sessionId && this.transports[sessionId]) {
-        const transport = this.transports[sessionId];
-        
-        // Handle the request with the transport
-        await transport.handleRequest(req, res, body);
+       // Reuse existing transport if we have a session ID
+       if (sessionId && this.transports[sessionId]) {
+         const transport = this.transports[sessionId];
+
+         // Handle the request with the transport in session context
+         const sessionToken = this.sessionTokens[sessionId];
+         await sessionStorage.run({ bearerToken: sessionToken }, async () => {
+           await transport.handleRequest(req, res, body);
+         });
         
         // Cleanup when the response ends
         res.on('close', () => {
@@ -93,22 +99,31 @@ class MCPStreamableHttpServer {
           console.error('StreamableHTTP transport error:', err);
         };
         
-        // Connect the transport to the MCP server
-        await this.server.connect(transport);
-        
-        // Handle the request with the transport
-        await transport.handleRequest(req, res, body);
+         // Connect the transport to the MCP server
+         await this.server.connect(transport);
+
+         // Handle the request with the transport in session context
+         await sessionStorage.run({ bearerToken: token }, async () => {
+           await transport.handleRequest(req, res, body);
+         });
         
         // Store the transport if we have a session ID
         const newSessionId = transport.sessionId;
         if (newSessionId) {
           console.error(\`New session established: \${newSessionId}\`);
           this.transports[newSessionId] = transport;
-          
+
+          // Store the token for this session if provided
+          if (token) {
+            this.sessionTokens[newSessionId] = token;
+            console.error(\`Bearer token stored for session \${newSessionId}\`);
+          }
+
           // Set up clean-up for when the transport is closed
           transport.onclose = () => {
             console.error(\`Session closed: \${newSessionId}\`);
             delete this.transports[newSessionId];
+            delete this.sessionTokens[newSessionId];
           };
         }
         

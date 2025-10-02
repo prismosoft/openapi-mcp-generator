@@ -62,11 +62,15 @@ export function generateHttpSecurityCode(): string {
   return `
     else if (scheme?.type === 'http') {
         if (scheme.scheme?.toLowerCase() === 'bearer') {
-            const token = process.env[\`${getEnvVarName(schemeName, 'BEARER_TOKEN')}\`];
+            // Get token from session storage, fall back to environment variable
+            let token = sessionStorage.getStore()?.bearerToken;
+            if (!token) {
+                token = process.env[\`${getEnvVarName(schemeName, 'BEARER_TOKEN')}\`];
+            }
             if (token) {
                 headers['authorization'] = \`Bearer \${token}\`;
             }
-        } 
+        }
         else if (scheme.scheme?.toLowerCase() === 'basic') {
             const username = process.env[\`${getEnvVarName(schemeName, 'BASIC_USERNAME')}\`];
             const password = process.env[\`${getEnvVarName(schemeName, 'BASIC_PASSWORD')}\`];
@@ -221,16 +225,17 @@ export function generateExecuteApiToolFunction(
                 return !!process.env[\`API_KEY_\${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}\`];
             }
             
-            // HTTP security (basic, bearer)
-            if (scheme.type === 'http') {
-                if (scheme.scheme?.toLowerCase() === 'bearer') {
-                    return !!process.env[\`BEARER_TOKEN_\${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}\`];
-                }
-                else if (scheme.scheme?.toLowerCase() === 'basic') {
-                    return !!process.env[\`BASIC_USERNAME_\${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}\`] && 
-                           !!process.env[\`BASIC_PASSWORD_\${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}\`];
-                }
-            }
+             // HTTP security (basic, bearer)
+             if (scheme.type === 'http') {
+                 if (scheme.scheme?.toLowerCase() === 'bearer') {
+                     // Check for token from session storage first, then env var
+                     return !!(sessionStorage.getStore()?.bearerToken) || !!process.env[\`BEARER_TOKEN_\${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}\`];
+                 }
+                 else if (scheme.scheme?.toLowerCase() === 'basic') {
+                     return !!process.env[\`BASIC_USERNAME_\${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}\`] &&
+                            !!process.env[\`BASIC_PASSWORD_\${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}\`];
+                 }
+             }
             
             // OAuth2 security
             if (scheme.type === 'oauth2') {
@@ -285,24 +290,28 @@ export function generateExecuteApiToolFunction(
                     }
                 }
             } 
-            // HTTP security (Bearer or Basic)
-            else if (scheme?.type === 'http') {
-                if (scheme.scheme?.toLowerCase() === 'bearer') {
-                    const token = process.env[\`BEARER_TOKEN_\${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}\`];
-                    if (token) {
-                        headers['authorization'] = \`Bearer \${token}\`;
-                        console.error(\`Applied Bearer token for '\${schemeName}'\`);
-                    }
-                } 
-                else if (scheme.scheme?.toLowerCase() === 'basic') {
-                    const username = process.env[\`BASIC_USERNAME_\${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}\`];
-                    const password = process.env[\`BASIC_PASSWORD_\${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}\`];
-                    if (username && password) {
-                        headers['authorization'] = \`Basic \${Buffer.from(\`\${username}:\${password}\`).toString('base64')}\`;
-                        console.error(\`Applied Basic authentication for '\${schemeName}'\`);
-                    }
-                }
-            }
+             // HTTP security (Bearer or Basic)
+             else if (scheme?.type === 'http') {
+                 if (scheme.scheme?.toLowerCase() === 'bearer') {
+                     // Get token from session storage, fall back to environment variable
+                     let token = sessionStorage.getStore()?.bearerToken;
+                     if (!token) {
+                         token = process.env[\`BEARER_TOKEN_\${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}\`];
+                     }
+                     if (token) {
+                         headers['authorization'] = \`Bearer \${token}\`;
+                         console.error(\`Applied Bearer token for '\${schemeName}'\`);
+                     }
+                 }
+                 else if (scheme.scheme?.toLowerCase() === 'basic') {
+                     const username = process.env[\`BASIC_USERNAME_\${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}\`];
+                     const password = process.env[\`BASIC_PASSWORD_\${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}\`];
+                     if (username && password) {
+                         headers['authorization'] = \`Basic \${Buffer.from(\`\${username}:\${password}\`).toString('base64')}\`;
+                         console.error(\`Applied Basic authentication for '\${schemeName}'\`);
+                     }
+                 }
+             }
             // OAuth2 security
             else if (scheme?.type === 'oauth2') {
                 // First try to use a pre-provided token
@@ -368,7 +377,7 @@ ${oauth2TokenAcquisitionCode}
 
 /**
  * Executes an API tool with the provided arguments
- * 
+ *
  * @param toolName Name of the tool to execute
  * @param definition Tool definition
  * @param toolArgs Arguments provided by the user
@@ -540,7 +549,7 @@ export function getSecuritySchemesDocs(
     } else if (scheme.type === 'http') {
       if (scheme.scheme?.toLowerCase() === 'bearer') {
         const envVar = getEnvVarName(name, 'BEARER_TOKEN');
-        docs += `- \`${envVar}\`: Bearer token for authentication\n`;
+        docs += `- \`${envVar}\`: Bearer token for authentication (can also be provided via \`token\` query parameter in MCP URL)\n`;
       } else if (scheme.scheme?.toLowerCase() === 'basic') {
         const usernameEnvVar = getEnvVarName(name, 'BASIC_USERNAME');
         const passwordEnvVar = getEnvVarName(name, 'BASIC_PASSWORD');
