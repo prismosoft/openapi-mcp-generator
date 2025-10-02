@@ -14,7 +14,7 @@ This CLI tool automates the generation of MCP-compatible servers that proxy requ
 
 - 🔧 **OpenAPI 3.0 Support**: Converts any OpenAPI 3.0+ spec into an MCP-compatible server.
 - 🔁 **Proxy Behavior**: Proxies calls to your original REST API while validating request structure and security.
-- 🔐 **Authentication Support**: API keys, Bearer tokens, Basic auth, and OAuth2 supported via environment variables.
+- 🔐 **Authentication Support**: API keys, Bearer tokens (via environment variables or query parameters), Basic auth, and OAuth2 supported.
 - 🧪 **Zod Validation**: Automatically generates Zod schemas from OpenAPI definitions for runtime input validation.
 - ⚙️ **Typed Server**: Fully typed, maintainable TypeScript code output.
 - 🔌 **Multiple Transports**: Communicate over stdio, SSE via Hono, or StreamableHTTP.
@@ -152,6 +152,7 @@ Implements the MCP StreamableHTTP transport which offers:
 | Status codes       | No                  | Limited           | Full HTTP codes    |
 | Headers            | No                  | Limited           | Full HTTP headers  |
 | Test client        | No                  | Yes               | Yes                |
+| Bearer token auth  | Env vars only       | Env vars + URL    | Env vars + URL     |
 
 ---
 
@@ -162,9 +163,23 @@ Configure auth credentials in your environment:
 | Auth Type  | Variable Format                                                                                    |
 | ---------- | -------------------------------------------------------------------------------------------------- |
 | API Key    | `API_KEY_<SCHEME_NAME>`                                                                            |
-| Bearer     | `BEARER_TOKEN_<SCHEME_NAME>`                                                                       |
+| Bearer     | `BEARER_TOKEN_<SCHEME_NAME>` (or `?token=<bearer_token>` in MCP URL)                               |
 | Basic Auth | `BASIC_USERNAME_<SCHEME_NAME>`, `BASIC_PASSWORD_<SCHEME_NAME>`                                     |
 | OAuth2     | `OAUTH_CLIENT_ID_<SCHEME_NAME>`, `OAUTH_CLIENT_SECRET_<SCHEME_NAME>`, `OAUTH_SCOPES_<SCHEME_NAME>` |
+
+### URL-Based Bearer Token Authentication
+
+For web-based transports (SSE and StreamableHTTP), you can also provide Bearer tokens directly in the MCP server URL:
+
+```bash
+# SSE transport with token
+https://your-mcp-server.com/sse?token=your_bearer_token_here
+
+# StreamableHTTP transport with token
+https://your-mcp-server.com/mcp?token=your_bearer_token_here
+```
+
+This approach provides session-based isolation, ensuring tokens are only accessible within their respective user sessions.
 
 ---
 
