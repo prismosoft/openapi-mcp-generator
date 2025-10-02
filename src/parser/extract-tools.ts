@@ -80,8 +80,10 @@ export function extractToolsFromApi(
         operation.description || operation.summary || `Executes ${method.toUpperCase()} ${path}`;
 
       // Generate input schema and extract parameters
-      const { inputSchema, parameters, requestBodyContentType } =
-        generateInputSchemaAndDetails(operation);
+      const { inputSchema, parameters, requestBodyContentType } = generateInputSchemaAndDetails(
+        operation,
+        pathItem as OpenAPIV3.PathItemObject
+      );
 
       // Extract parameter details for execution
       const executionParameters = parameters.map((p) => ({ name: p.name, in: p.in }));
@@ -113,9 +115,13 @@ export function extractToolsFromApi(
  * Generates input schema and extracts parameter details from an operation
  *
  * @param operation OpenAPI operation object
+ * @param pathItem OpenAPI path item object (for path-level parameters)
  * @returns Input schema, parameters, and request body content type
  */
-export function generateInputSchemaAndDetails(operation: OpenAPIV3.OperationObject): {
+export function generateInputSchemaAndDetails(
+  operation: OpenAPIV3.OperationObject,
+  pathItem: OpenAPIV3.PathItemObject
+): {
   inputSchema: JSONSchema7 | boolean;
   parameters: OpenAPIV3.ParameterObject[];
   requestBodyContentType?: string;
@@ -123,10 +129,35 @@ export function generateInputSchemaAndDetails(operation: OpenAPIV3.OperationObje
   const properties: { [key: string]: JSONSchema7 | boolean } = {};
   const required: string[] = [];
 
-  // Process parameters
-  const allParameters: OpenAPIV3.ParameterObject[] = Array.isArray(operation.parameters)
+  // Process parameters from both path and operation levels
+  // Path-level parameters apply to all operations on this path
+  const pathParameters: OpenAPIV3.ParameterObject[] = Array.isArray(pathItem.parameters)
+    ? pathItem.parameters.map((p) => p as OpenAPIV3.ParameterObject)
+    : [];
+
+  // Operation-level parameters are specific to this operation
+  const operationParameters: OpenAPIV3.ParameterObject[] = Array.isArray(operation.parameters)
     ? operation.parameters.map((p) => p as OpenAPIV3.ParameterObject)
     : [];
+
+  // Merge parameters: operation-level parameters override path-level ones with the same name
+  const parameterMap = new Map<string, OpenAPIV3.ParameterObject>();
+
+  // Add path parameters first
+  pathParameters.forEach((param) => {
+    if (param.name) {
+      parameterMap.set(param.name, param);
+    }
+  });
+
+  // Add/override with operation parameters
+  operationParameters.forEach((param) => {
+    if (param.name) {
+      parameterMap.set(param.name, param);
+    }
+  });
+
+  const allParameters: OpenAPIV3.ParameterObject[] = Array.from(parameterMap.values());
 
   allParameters.forEach((param) => {
     if (!param.name || !param.schema) return;
