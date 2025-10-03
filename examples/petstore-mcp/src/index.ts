@@ -622,7 +622,7 @@ server.setRequestHandler(
         // --- End Argument Validation ---
 
         // --- API Call Preparation ---
-        let urlPath = '/pet';
+        const urlPath = '/pet';
         if (urlPath.includes('{')) {
           throw new Error(
             `Validation passed but failed to resolve path parameters in URL: ${urlPath}. Check schema/validation logic.`
@@ -730,7 +730,7 @@ server.setRequestHandler(
         // --- End Argument Validation ---
 
         // --- API Call Preparation ---
-        let urlPath = '/pet';
+        const urlPath = '/pet';
         if (urlPath.includes('{')) {
           throw new Error(
             `Validation passed but failed to resolve path parameters in URL: ${urlPath}. Check schema/validation logic.`
@@ -838,7 +838,7 @@ server.setRequestHandler(
         // --- End Argument Validation ---
 
         // --- API Call Preparation ---
-        let urlPath = '/pet/findByStatus';
+        const urlPath = '/pet/findByStatus';
         if (urlPath.includes('{')) {
           throw new Error(
             `Validation passed but failed to resolve path parameters in URL: ${urlPath}. Check schema/validation logic.`
@@ -941,7 +941,7 @@ server.setRequestHandler(
         // --- End Argument Validation ---
 
         // --- API Call Preparation ---
-        let urlPath = '/pet/findByTags';
+        const urlPath = '/pet/findByTags';
         if (urlPath.includes('{')) {
           throw new Error(
             `Validation passed but failed to resolve path parameters in URL: ${urlPath}. Check schema/validation logic.`
@@ -1478,7 +1478,7 @@ server.setRequestHandler(
         // --- End Argument Validation ---
 
         // --- API Call Preparation ---
-        let urlPath = '/store/inventory';
+        const urlPath = '/store/inventory';
         if (urlPath.includes('{')) {
           throw new Error(
             `Validation passed but failed to resolve path parameters in URL: ${urlPath}. Check schema/validation logic.`
@@ -1578,7 +1578,7 @@ server.setRequestHandler(
         // --- End Argument Validation ---
 
         // --- API Call Preparation ---
-        let urlPath = '/store/order';
+        const urlPath = '/store/order';
         if (urlPath.includes('{')) {
           throw new Error(
             `Validation passed but failed to resolve path parameters in URL: ${urlPath}. Check schema/validation logic.`
@@ -1894,7 +1894,7 @@ server.setRequestHandler(
         // --- End Argument Validation ---
 
         // --- API Call Preparation ---
-        let urlPath = '/user';
+        const urlPath = '/user';
         if (urlPath.includes('{')) {
           throw new Error(
             `Validation passed but failed to resolve path parameters in URL: ${urlPath}. Check schema/validation logic.`
@@ -2002,7 +2002,7 @@ server.setRequestHandler(
         // --- End Argument Validation ---
 
         // --- API Call Preparation ---
-        let urlPath = '/user/createWithList';
+        const urlPath = '/user/createWithList';
         if (urlPath.includes('{')) {
           throw new Error(
             `Validation passed but failed to resolve path parameters in URL: ${urlPath}. Check schema/validation logic.`
@@ -2110,7 +2110,7 @@ server.setRequestHandler(
         // --- End Argument Validation ---
 
         // --- API Call Preparation ---
-        let urlPath = '/user/login';
+        const urlPath = '/user/login';
         if (urlPath.includes('{')) {
           throw new Error(
             `Validation passed but failed to resolve path parameters in URL: ${urlPath}. Check schema/validation logic.`
@@ -2216,7 +2216,7 @@ server.setRequestHandler(
         // --- End Argument Validation ---
 
         // --- API Call Preparation ---
-        let urlPath = '/user/logout';
+        const urlPath = '/user/logout';
         if (urlPath.includes('{')) {
           throw new Error(
             `Validation passed but failed to resolve path parameters in URL: ${urlPath}. Check schema/validation logic.`

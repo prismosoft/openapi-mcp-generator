@@ -669,7 +669,7 @@ async function acquireOAuth2Token(
     }
 
     // Prepare the token request
-    let formData = new URLSearchParams();
+    const formData = new URLSearchParams();
     formData.append('grant_type', 'client_credentials');
 
     // Add scopes if specified

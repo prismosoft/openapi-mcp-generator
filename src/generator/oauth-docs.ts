@@ -16,7 +16,7 @@ export function generateOAuth2Docs(
     return '# OAuth2 Configuration\n\nNo OAuth2 security schemes defined in this API.';
   }
 
-  let oauth2Schemes: { name: string; scheme: OpenAPIV3.OAuth2SecurityScheme }[] = [];
+  const oauth2Schemes: { name: string; scheme: OpenAPIV3.OAuth2SecurityScheme }[] = [];
 
   // Find OAuth2 schemes
   for (const [name, schemeOrRef] of Object.entries(securitySchemes)) {
