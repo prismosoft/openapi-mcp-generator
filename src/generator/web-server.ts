@@ -167,6 +167,25 @@ const transports: {[sessionId: string]: SSETransport} = {};
 // Store bearer tokens by session ID
 const sessionTokens: {[sessionId: string]: string} = {};
 
+// Helper to extract bearer token from Authorization header or query parameter
+const extractToken = (c: Context): string | undefined => {
+  const authHeader = c.req.header('authorization');
+  if (authHeader) {
+    const match = authHeader.match(/^Bearer\\s+(.+)$/i);
+    if (match) {
+      return match[1].trim();
+    }
+    return authHeader.trim();
+  }
+
+  const queryToken = c.req.query('token');
+  if (typeof queryToken === 'string' && queryToken.trim().length > 0) {
+    return queryToken.trim();
+  }
+
+  return undefined;
+};
+
 // Add a simple health check endpoint
 app.get('/health', (c) => {
   return c.json({ status: 'OK', server: SERVER_NAME, version: SERVER_VERSION });
@@ -175,8 +194,8 @@ app.get('/health', (c) => {
 // SSE endpoint for clients to connect to
  app.get("/sse", (c) => {
    return streamSSE(c, async (stream) => {
-     // Extract bearer token from query string if present
-     const token = c.req.query('token');
+     // Extract bearer token from headers or query
+     const token = extractToken(c);
 
      // Create SSE transport
      const transport = new SSETransport('/api/messages', stream);
@@ -241,6 +260,12 @@ app.get('/health', (c) => {
 
    if (!transport) {
      return c.json({ error: 'No active session found with the provided sessionId' }, 404);
+   }
+
+   const token = extractToken(c);
+   if (token) {
+     sessionTokens[sessionId] = token;
+     console.error(\`Bearer token updated for session \${sessionId}\`);
    }
 
    return transport.handlePostMessage(c);
